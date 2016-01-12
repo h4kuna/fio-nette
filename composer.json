@@ -1,27 +1,27 @@
 {
-    "name": "h4kuna/fio-nette",
-    "type": "library",
-    "description": "Fio library and this is extension for Nette framework.",
-    "homepage": "https://github.com/h4kuna/fio-nette",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Milan Matějček",
-            "email": "milan.matejcek@gmail.com",
-            "role": "Developer"
-        }
-    ],
-    "require": {
+	"name": "h4kuna/fio-nette",
+	"type": "library",
+	"description": "Fio library and this is extension for Nette framework.",
+	"homepage": "https://github.com/h4kuna/fio-nette",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Milan Matějček",
+			"email": "milan.matejcek@gmail.com",
+			"role": "Developer"
+		}
+	],
+	"require": {
 		"h4kuna/fio": "dev-multi-accounts-work",
-        "nette/bootstrap": "~2.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "h4kuna\\Fio\\": "src/"
-        }
-    },
-    "require-dev": {
-        "tracy/tracy": "~2.0",
-        "nette/tester": "~1.0"
-    }
+		"nette/bootstrap": "~2.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"h4kuna\\Fio\\": "src/"
+		}
+	},
+	"require-dev": {
+		"tracy/tracy": "~2.0",
+		"nette/tester": "~1.0"
+	}
 }

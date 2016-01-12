@@ -2,7 +2,7 @@ Fio for Nette
 =============
 [![Build Status](https://travis-ci.org/h4kuna/fio-nette.svg?branch=master)](https://travis-ci.org/h4kuna/fio-nette)
 
-Homepage for **Fio** [library](//github.com/h4kuna/fio).
+Homepage for **Fio** and [documentation](//github.com/h4kuna/fio).
 
 Installation to project
 -----------------------
