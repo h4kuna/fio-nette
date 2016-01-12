@@ -1,0 +1,4 @@
+nbproject/
+vendor/
+tests/temp/
+/composer.lock
