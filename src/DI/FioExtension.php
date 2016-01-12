@@ -56,8 +56,7 @@ class FioExtension extends CompilerExtension
 
 		// Reader
 		$builder->addDefinition($this->prefix('reader'))
-			->setClass('h4kuna\Fio\Request\Read\Files\Json')
-			->setFactory($this->prefix('@jsonTransactionFactory::createReader'));
+			->setClass('h4kuna\Fio\Request\Read\Files\Json');
 
 		// FioPay
 		$builder->addDefinition($this->prefix('fioPay'))
