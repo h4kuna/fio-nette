@@ -37,4 +37,12 @@ fioExtension:
 		my-alias: # name for select account
 			account: 2600267402/2010
 			token: 5asd64as5d46ad5a6
+		next-alias:
+			account: 123456789/3216
+			token: 6a4sd54asadsasde564			
+```
+
+And choose account like this.
+```php
+$fioRead->setActive('next-alias');
 ```
