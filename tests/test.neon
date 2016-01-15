@@ -6,13 +6,13 @@ nette:
         debugger: TRUE
 
 extensions:
-    fioExtension: h4kuna\Fio\DI\FioExtension
+    fioExtension: h4kuna\Fio\Nette\DI\FioExtension
 
 fioExtension:
 	accounts:
-		default:
-			account: "123456789/1234"
-			token: 'loremIpsum86'
+		fio1:
+			account: 11111111/1234
+			token: foooof
 		fio2:
-			account: 13212/3312
-			token: "dasdasd"
+			account: 22222222/1234
+			token: barrab

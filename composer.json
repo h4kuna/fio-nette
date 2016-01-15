@@ -17,7 +17,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"h4kuna\\Fio\\": "src/"
+			"h4kuna\\Fio\\Nette\\": "src/"
 		}
 	},
 	"require-dev": {

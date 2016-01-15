@@ -16,7 +16,7 @@ Example NEON config
 Define extension
 ```
 extensions:
-    fioExtension: h4kuna\Fio\DI\FioExtension
+    fioExtension: h4kuna\Fio\Nette\DI\FioExtension
 ```
 
 Configure extension
@@ -30,7 +30,7 @@ fioExtension:
     transactionClass: \h4kuna\Fio\Response\Read\Transaction # if you need change name of property
 ```
 
-More accounts
+More accounts and first is default.
 ```
 fioExtension:
 	accounts:
@@ -39,10 +39,15 @@ fioExtension:
 			token: 5asd64as5d46ad5a6
 		next-alias:
 			account: 123456789/3216
-			token: 6a4sd54asadsasde564			
+			token: 6a4sd54asadsasde564
 ```
 
 And choose account like this.
 ```php
-$fioRead->setActive('next-alias');
+$fioFactory = $container->getByType('h4kuna\Fio\Nette\FioFactory');
+$fioPay = $fioFactory->createFioPay('next-alias');
+
+// both are same, because first is default
+$fioRead = $fioFactory->createFioRead();
+$fioRead = $fioFactory->createFioRead('my-alias');
 ```

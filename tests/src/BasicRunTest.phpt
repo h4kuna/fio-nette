@@ -5,9 +5,17 @@ use h4kuna\Fio,
 
 $container = require __DIR__ . '/../bootsrap.php';
 
+/* @var $fioFactory Fio\Nette\FioFactory */
+$fioFactory = $container->getByType('h4kuna\Fio\Nette\FioFactory');
 
-$fioPay = $container->getByType('h4kuna\Fio\FioPay');
+// PAY
+$fioPay = $fioFactory->createFioPay();
 Assert::true($fioPay instanceof Fio\FioPay);
+Assert::same($fioPay->getAccount(), $fioFactory->createFioPay('fio1')->getAccount());
 
-$fioRead = $container->getByType('h4kuna\Fio\FioRead');
-Assert::true($fioRead instanceof Fio\FioRead);
+$fioPay2 = $fioFactory->createFioPay('fio2');
+Assert::same('22222222', $fioPay2->getAccount()->getAccount());
+
+
+// READ
+Assert::true($fioFactory->createFioRead() instanceof Fio\FioRead);

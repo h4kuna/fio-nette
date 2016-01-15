@@ -1,6 +1,6 @@
 <?php
 
-namespace h4kuna\Fio\DI;
+namespace h4kuna\Fio\Nette\DI;
 
 use Nette\DI\CompilerExtension,
 	Nette\Utils;
@@ -31,40 +31,37 @@ class FioExtension extends CompilerExtension
 
 		Utils\FileSystem::createDir($config['temp']);
 
-		// Accounts
+		// AccountCollection
 		$builder->addDefinition($this->prefix('accounts'))
-			->setClass('h4kuna\Fio\Account\Accounts')
-			->setFactory('h4kuna\Fio\Account\AccountsFactory::create', [$config['accounts']]);
+			->setClass('h4kuna\Fio\Account\AccountCollection')
+			->setFactory('h4kuna\Fio\Account\AccountCollectionFactory::create', [$config['accounts']]);
 
-		// XMLFile
+		// XMLFile - lazy
 		$builder->addDefinition($this->prefix('xmlFile'))
 			->setClass('h4kuna\Fio\Request\Pay\XMLFile')
 			->setArguments([$config['temp']]);
 
-		// PaymentFactory
+		// IPaymentFactory
 		$builder->addDefinition($this->prefix('paymentFactory'))
-			->setClass('h4kuna\Fio\Request\Pay\PaymentFactory');
+			->setClass('h4kuna\Fio\Request\Pay\PaymentFactory')
+			->setImplement('h4kuna\Fio\Nette\DI\IPaymentFactory');
 
 		// Queue
 		$builder->addDefinition($this->prefix('queue'))
 			->setClass('h4kuna\Fio\Request\Queue');
 
-		// StatementFactory
+		// JsonTransactionFactory - lazy
 		$builder->addDefinition($this->prefix('jsonTransactionFactory'))
 			->setClass('h4kuna\Fio\Response\Read\JsonTransactionFactory')
 			->setArguments([$config['transactionClass']]);
 
-		// Reader
+		// Reader - lazy
 		$builder->addDefinition($this->prefix('reader'))
 			->setClass('h4kuna\Fio\Request\Read\Files\Json');
 
-		// FioPay
-		$builder->addDefinition($this->prefix('fioPay'))
-			->setClass('h4kuna\Fio\FioPay');
-
-		// FioRead
-		$builder->addDefinition($this->prefix('fioRead'))
-			->setClass('h4kuna\Fio\FioRead');
+		// FioFactory
+		$builder->addDefinition($this->prefix('fioFactory'))
+			->setClass('h4kuna\Fio\Nette\FioFactory');
 	}
 
 }
