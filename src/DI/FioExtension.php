@@ -41,11 +41,6 @@ class FioExtension extends CompilerExtension
 			->setClass('h4kuna\Fio\Request\Pay\XMLFile')
 			->setArguments([$config['temp']]);
 
-		// IPaymentFactory
-		$builder->addDefinition($this->prefix('paymentFactory'))
-			->setClass('h4kuna\Fio\Request\Pay\PaymentFactory')
-			->setImplement('h4kuna\Fio\Nette\DI\IPaymentFactory');
-
 		// Queue
 		$builder->addDefinition($this->prefix('queue'))
 			->setClass('h4kuna\Fio\Request\Queue');
