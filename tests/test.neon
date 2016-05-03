@@ -9,6 +9,8 @@ extensions:
     fioExtension: h4kuna\Fio\Nette\DI\FioExtension
 
 fioExtension:
+	downloadOptions:
+		CURLOPT_HEADER: 1
 	accounts:
 		fio1:
 			account: 11111111/1234

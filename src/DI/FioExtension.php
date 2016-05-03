@@ -13,7 +13,8 @@ class FioExtension extends CompilerExtension
 		'token' => NULL,
 		'accounts' => [],
 		'temp' => '%tempDir%/fio',
-		'transactionClass' => '\h4kuna\Fio\Response\Read\Transaction'
+		'transactionClass' => '\h4kuna\Fio\Response\Read\Transaction',
+		'downloadOptions' => []
 	];
 
 	public function loadConfiguration()
@@ -42,8 +43,12 @@ class FioExtension extends CompilerExtension
 			->setArguments([$config['temp']]);
 
 		// Queue
-		$builder->addDefinition($this->prefix('queue'))
+		$queue = $builder->addDefinition($this->prefix('queue'))
 			->setClass('h4kuna\Fio\Request\Queue');
+		if ($config['downloadOptions']) {
+			$setup = new \Nette\DI\Statement('?->setDownloadOptions(?)', [$queue, $config['downloadOptions']]);
+			$queue->setSetup([$setup]);
+		}
 
 		// JsonTransactionFactory - lazy
 		$builder->addDefinition($this->prefix('jsonTransactionFactory'))
