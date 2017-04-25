@@ -6,7 +6,7 @@ use h4kuna\Fio,
 $container = require __DIR__ . '/../bootsrap.php';
 
 /* @var $fioFactory Fio\Nette\FioFactory */
-$fioFactory = $container->getByType('h4kuna\Fio\Nette\FioFactory');
+$fioFactory = $container->getService('fioExtension.fioFactory');
 
 // PAY
 $fioPay = $fioFactory->createFioPay();

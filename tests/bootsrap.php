@@ -1,14 +1,6 @@
 <?php
 
-include __DIR__ . "/../vendor/autoload.php";
-
-function dd($var /* ... */)
-{
-	foreach (func_get_args() as $arg) {
-		\Tracy\Debugger::dump($arg);
-	}
-	exit;
-}
+include __DIR__ . '/../vendor/autoload.php';
 
 Tester\Environment::setup();
 
@@ -19,14 +11,12 @@ $tmp = __DIR__ . '/temp';
 $configurator->enableDebugger($tmp);
 $configurator->setTempDirectory($tmp);
 $configurator->setDebugMode(FALSE);
-$configurator->addConfig(__DIR__ . '/test.neon');
-$local = __DIR__ . '/test.local.neon';
+$configurator->addConfig(__DIR__ . '/config/test.neon');
+$local = __DIR__ . '/config/test.local.neon';
 if (is_file($local)) {
 	$configurator->addConfig($local);
 }
 $container = $configurator->createContainer();
-
-\Tracy\Debugger::enable(FALSE);
 
 return $container;
 

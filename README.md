@@ -45,7 +45,10 @@ fioExtension:
 
 And choose account like this.
 ```php
+// nette 2.3
 $fioFactory = $container->getByType('h4kuna\Fio\Nette\FioFactory');
+// nette 2.4 & 2.3
+$fioFactory = $container->getService('fioExtension.fioFactory');
 $fioPay = $fioFactory->createFioPay('next-alias');
 
 // both are same, because first is default

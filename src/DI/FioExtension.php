@@ -44,8 +44,7 @@ class FioExtension extends CompilerExtension
 
 		// Queue
 		$queue = $builder->addDefinition($this->prefix('queue'))
-			->setClass('h4kuna\Fio\Request\Queue')
-			->setArguments([$config['temp']]);
+			->setClass('h4kuna\Fio\Request\Queue', [$config['temp']]);
 		if ($config['downloadOptions']) {
 			$setup = new \Nette\DI\Statement('?->setDownloadOptions(?)', [$queue, $config['downloadOptions']]);
 			$queue->setSetup([$setup]);
