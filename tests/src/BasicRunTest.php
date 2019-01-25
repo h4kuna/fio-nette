@@ -1,7 +1,7 @@
 <?php
 
-use h4kuna\Fio,
-	Tester\Assert;
+use h4kuna\Fio;
+use Tester\Assert;
 
 $container = require __DIR__ . '/../bootsrap.php';
 

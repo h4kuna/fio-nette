@@ -1,67 +1,103 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace h4kuna\Fio\Nette\DI;
 
-use Nette\DI\CompilerExtension,
-	Nette\Utils;
+use h4kuna\Fio;
+use Nette;
+use Nette\DI\CompilerExtension;
+use Nette\DI\ContainerBuilder;
+use Nette\Schema\Expect;
+use Nette\Utils;
 
 class FioExtension extends CompilerExtension
 {
 
-	public $defaults = [
-		'account' => NULL,
-		'token' => NULL,
-		'accounts' => [],
-		'temp' => '%tempDir%/fio',
-		'transactionClass' => '\h4kuna\Fio\Response\Read\Transaction',
-		'downloadOptions' => []
-	];
+	public function getConfigSchema(): Nette\Schema\Schema
+	{
+		$tempDir = $this->getContainerBuilder()->parameters['tempDir'] ?? '/tmp';
+		return Expect::structure([
+			'account' => Expect::string(),
+			'token' => Expect::string(),
+			'accounts' => Expect::array([]),
+			'tempDir' => Expect::string()
+				->default($tempDir . DIRECTORY_SEPARATOR . 'fio'),
+			'session' => Expect::bool(false),
+			'transactionClass' => Expect::string(Fio\Response\Read\Transaction::class),
+			'downloadOptions' => Expect::array([]),
+		]);
+	}
+
 
 	public function loadConfiguration()
 	{
 		$builder = $this->getContainerBuilder();
-		$config = $this->getConfig($this->defaults);
+		$config = $this->config;
 
-		if (!$config['accounts']) {
-			$config['accounts']['default'] = [
-				'account' => $config['account'],
-				'token' => $config['token']
+		if ($config->accounts === []) {
+			$config->accounts['default'] = [
+				'account' => $config->account,
+				'token' => $config->token,
 			];
 		}
-		unset($config['account'], $config['token']);
 
-		Utils\FileSystem::createDir($config['temp']);
+		Utils\FileSystem::createDir($config->tempDir);
 
-		// AccountCollection
+		$this->buildAccountCollection($builder, $config->accounts);
+
+		$this->buildXmlFile($builder, $config->tempDir);
+
+		$this->buildQueue($builder, $config->tempDir, $config->downloadOptions);
+
+		$this->buildTransactionFactory($builder, $config->transactionClass);
+
+		$this->buildJsonReader($builder);
+
+		$this->buildFioFactory($builder);
+	}
+
+
+	private function buildAccountCollection(ContainerBuilder $builder, array $accounts): void
+	{
 		$builder->addDefinition($this->prefix('accounts'))
-			->setClass('h4kuna\Fio\Account\AccountCollection')
-			->setFactory('h4kuna\Fio\Account\AccountCollectionFactory::create', [$config['accounts']]);
+			->setFactory(Fio\Account\AccountCollectionFactory::class . '::create', [$accounts]);
+	}
 
-		// XMLFile - lazy
+
+	private function buildXmlFile(ContainerBuilder $builder, string $tempDir): void
+	{
 		$builder->addDefinition($this->prefix('xmlFile'))
-			->setClass('h4kuna\Fio\Request\Pay\XMLFile')
-			->setArguments([$config['temp']]);
+			->setFactory(Fio\Request\Pay\XMLFile::class, [$tempDir]);
+	}
 
-		// Queue
+
+	private function buildQueue(ContainerBuilder $builder, string $tempDir, array $downloadOptions): void
+	{
 		$queue = $builder->addDefinition($this->prefix('queue'))
-			->setClass('h4kuna\Fio\Request\Queue', [$config['temp']]);
-		if ($config['downloadOptions']) {
-			$setup = new \Nette\DI\Statement('?->setDownloadOptions(?)', [$queue, $config['downloadOptions']]);
-			$queue->setSetup([$setup]);
+			->setFactory(Fio\Request\Queue::class, [$tempDir]);
+		if ($downloadOptions !== []) {
+			$queue->addSetup('setDownloadOptions', [$downloadOptions]);
 		}
+	}
 
-		// JsonTransactionFactory - lazy
+
+	private function buildTransactionFactory(ContainerBuilder $builder, string $transactionClass): void
+	{
 		$builder->addDefinition($this->prefix('jsonTransactionFactory'))
-			->setClass('h4kuna\Fio\Response\Read\JsonTransactionFactory')
-			->setArguments([$config['transactionClass']]);
+			->setFactory(Fio\Response\Read\JsonTransactionFactory::class, [$transactionClass]);
+	}
 
-		// Reader - lazy
+
+	private function buildJsonReader(ContainerBuilder $builder): void
+	{
 		$builder->addDefinition($this->prefix('reader'))
-			->setClass('h4kuna\Fio\Request\Read\Files\Json');
+			->setFactory(Fio\Request\Read\Files\Json::class);
+	}
 
-		// FioFactory
+
+	private function buildFioFactory(ContainerBuilder $builder): void
+	{
 		$builder->addDefinition($this->prefix('fioFactory'))
-			->setClass('h4kuna\Fio\Nette\FioFactory');
+			->setFactory(Fio\Nette\FioFactory::class);
 	}
 
 }

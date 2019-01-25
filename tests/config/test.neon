@@ -1,9 +1,8 @@
 php:
     date.timezone: Europe/Prague
 
-nette:
-    container:
-        debugger: TRUE
+di:
+	debugger: TRUE
 
 extensions:
     fioExtension: h4kuna\Fio\Nette\DI\FioExtension

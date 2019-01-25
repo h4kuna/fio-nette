@@ -1,13 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace h4kuna\Fio\Nette;
 
-use h4kuna\Fio,
-	Nette\DI;
+use h4kuna\Fio;
+use Nette\DI;
 
-/**
- * @author Milan Matějček
- */
 class FioFactory
 {
 
@@ -27,22 +24,16 @@ class FioFactory
 		$this->container = $container;
 	}
 
-	public function createFioPay($name = NULL)
+
+	public function createFioPay(string $name = ''): Fio\FioPay
 	{
-		return new Fio\FioPay($this->queue, $this->getAccount($name), $this->container->getByType('h4kuna\Fio\Request\Pay\XMLFile'));
+		return new Fio\FioPay($this->queue, $this->accountCollecion->account($name), $this->container->getByType(Fio\Request\Pay\XMLFile::class));
 	}
 
-	public function createFioRead($name = NULL)
-	{
-		return new Fio\FioRead($this->queue, $this->getAccount($name), $this->container->getByType('h4kuna\Fio\Request\Read\Files\Json'));
-	}
 
-	private function getAccount($name)
+	public function createFioRead(string $name = ''): Fio\FioRead
 	{
-		if ($name) {
-			return $this->accountCollecion->get($name);
-		}
-		return $this->accountCollecion->getDefault();
+		return new Fio\FioRead($this->queue, $this->accountCollecion->account($name), $this->container->getByType(Fio\Request\Read\Files\Json::class));
 	}
 
 }
