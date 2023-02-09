@@ -1,0 +1,18 @@
+parameters:
+	level: max
+	paths:
+		- src
+		- tests/src
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method object\\:\\:createFioPay\\(\\)\\.$#"
+			count: 4
+			path: tests/src/ExtensionTest.php
+
+		-
+			message: "#^Call to an undefined method object\\:\\:createFioRead\\(\\)\\.$#"
+			count: 3
+			path: tests/src/ExtensionTest.php
+
+includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon

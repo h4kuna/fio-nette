@@ -1,28 +1,39 @@
 {
-	"name": "h4kuna/fio-nette",
-	"type": "library",
-	"description": "Fio library and this is extension for Nette framework.",
-	"homepage": "https://github.com/h4kuna/fio-nette",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Milan Matějček",
-			"email": "milan.matejcek@gmail.com",
-			"role": "Developer"
-		}
-	],
-	"require": {
-		"php": ">=7.1",
-		"h4kuna/fio": "^2.0",
-		"nette/bootstrap": "^3.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"h4kuna\\Fio\\Nette\\": "src/"
-		}
-	},
-	"require-dev": {
-		"nette/tester": "^2.0",
-		"tracy/tracy": "^2.0"
-	}
+  "name": "h4kuna/fio-nette",
+  "type": "library",
+  "description": "Fio library and this is extension for Nette framework.",
+  "homepage": "https://github.com/h4kuna/fio-nette",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Milan Matějček",
+      "email": "milan.matejcek@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "h4kuna/dir": "^0.1.2",
+    "h4kuna/fio": "^3.0",
+    "nette/di": "^3.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "h4kuna\\Fio\\Nette\\": "src/"
+    }
+  },
+  "require-dev": {
+    "guzzlehttp/guzzle": "^7.5",
+    "nette/tester": "^2.4",
+    "phpstan/phpstan": "^1.9",
+    "phpstan/phpstan-strict-rules": "^1.4",
+    "tracy/tracy": "^2.9"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "scripts": {
+    "phpstan": "vendor/bin/phpstan analyse",
+    "tests": "vendor/bin/tester -s -j 4 -C --colors 1 tests/src"
+  }
 }

@@ -2,102 +2,161 @@
 
 namespace h4kuna\Fio\Nette\DI;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\HttpFactory;
+use h4kuna\Dir\TempDir;
 use h4kuna\Fio;
 use Nette;
 use Nette\DI\CompilerExtension;
-use Nette\DI\ContainerBuilder;
 use Nette\Schema\Expect;
-use Nette\Utils;
+use Psr\Http\Client\ClientInterface;
 
+/**
+ * @property-read Config $config
+ */
 class FioExtension extends CompilerExtension
 {
 
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
-		$tempDir = $this->getContainerBuilder()->parameters['tempDir'] ?? '/tmp';
-		return Expect::structure([
-			'account' => Expect::string(),
-			'token' => Expect::string(),
-			'accounts' => Expect::array([]),
-			'tempDir' => Expect::string()
-				->default($tempDir . DIRECTORY_SEPARATOR . 'fio'),
-			'session' => Expect::bool(false),
-			'transactionClass' => Expect::string(Fio\Response\Read\Transaction::class),
-			'downloadOptions' => Expect::array([]),
-		]);
+		$tempDir = $this->getContainerBuilder()->parameters['tempDir'] ?? '';
+		if ($tempDir !== '') {
+			$tempDir .= '/';
+		}
+		$tempDir .= 'h4kuna/fio';
+
+		$config = new Config();
+		$config->tempDir = $tempDir;
+
+		return Expect::from($config);
 	}
 
 
 	public function loadConfiguration()
 	{
-		$builder = $this->getContainerBuilder();
-		$config = $this->config;
-
-		if ($config->accounts === []) {
-			$config->accounts['default'] = [
-				'account' => $config->account,
-				'token' => $config->token,
+		if ($this->config->accounts === []) {
+			$this->config->accounts = [
+				'default' => [
+					'account' => $this->config->account,
+					'token' => $this->config->token,
+				],
 			];
 		}
 
-		Utils\FileSystem::createDir($config->tempDir);
+		$this->buildAccountCollection();
 
-		$this->buildAccountCollection($builder, $config->accounts);
+		$this->buildXmlFile();
 
-		$this->buildXmlFile($builder, $config->tempDir);
+		$this->buildTransactionFactory();
 
-		$this->buildQueue($builder, $config->tempDir, $config->downloadOptions);
+		$this->buildJsonReader();
 
-		$this->buildTransactionFactory($builder, $config->transactionClass);
-
-		$this->buildJsonReader($builder);
-
-		$this->buildFioFactory($builder);
+		$this->buildFioFactory();
 	}
 
 
-	private function buildAccountCollection(ContainerBuilder $builder, array $accounts): void
+	public function beforeCompile(): void
 	{
-		$builder->addDefinition($this->prefix('accounts'))
-			->setFactory(Fio\Account\AccountCollectionFactory::class . '::create', [$accounts]);
+		$this->buildRequestFactory();
+		$this->buildQueue();
 	}
 
 
-	private function buildXmlFile(ContainerBuilder $builder, string $tempDir): void
+	private function buildAccountCollection(): void
 	{
-		$builder->addDefinition($this->prefix('xmlFile'))
-			->setFactory(Fio\Request\Pay\XMLFile::class, [$tempDir]);
+		$x = Fio\Account\AccountCollectionFactory::create($this->config->accounts);
+
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('accounts'))
+			->setFactory('unserialize(?)', [serialize($x)])
+			->setType(Fio\Account\AccountCollection::class)
+			->setAutowired(false);
 	}
 
 
-	private function buildQueue(ContainerBuilder $builder, string $tempDir, array $downloadOptions): void
+	private function buildXmlFile(): void
 	{
-		$queue = $builder->addDefinition($this->prefix('queue'))
-			->setFactory(Fio\Request\Queue::class, [$tempDir]);
-		if ($downloadOptions !== []) {
-			$queue->addSetup('setDownloadOptions', [$downloadOptions]);
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('xml.import'))
+			->setFactory(Fio\Pay\XMLFile::class)
+			->setAutowired(false);
+	}
+
+
+	private function buildQueue(): void
+	{
+		try {
+			$tempDir = $this->getContainerBuilder()->getDefinitionByType(TempDir::class);
+		} catch (Nette\DI\MissingServiceException) {
+			$tempDir = $this->getContainerBuilder()->addDefinition($this->prefix('tempDir'))
+				->setFactory(TempDir::class, [$this->config->tempDir])
+				->setAutowired(false);
 		}
+
+		try {
+			$client = $this->getContainerBuilder()->getDefinitionByType(ClientInterface::class);
+		} catch (Nette\DI\MissingServiceException) {
+			Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+			$client = $this->getContainerBuilder()->addDefinition($this->prefix('http.client'))
+				->setFactory(Client::class)
+				->setAutowired(false);
+		}
+
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('queue'))
+			->setFactory(Fio\Utils\Queue::class, [$tempDir, $client, $this->prefix('@request.factory')])
+			->setAutowired(false);
 	}
 
 
-	private function buildTransactionFactory(ContainerBuilder $builder, string $transactionClass): void
+	private function buildTransactionFactory(): void
 	{
-		$builder->addDefinition($this->prefix('jsonTransactionFactory'))
-			->setFactory(Fio\Response\Read\JsonTransactionFactory::class, [$transactionClass]);
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('transaction.factory'))
+			->setFactory(Fio\Read\TransactionFactory::class)
+			->setAutowired(false);
 	}
 
 
-	private function buildJsonReader(ContainerBuilder $builder): void
+	private function buildJsonReader(): void
 	{
-		$builder->addDefinition($this->prefix('reader'))
-			->setFactory(Fio\Request\Read\Files\Json::class);
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('json'))
+			->setFactory(Fio\Read\Json::class)
+			->setAutowired(false);
 	}
 
 
-	private function buildFioFactory(ContainerBuilder $builder): void
+	private function buildFioFactory(): void
 	{
-		$builder->addDefinition($this->prefix('fioFactory'))
-			->setFactory(Fio\Nette\FioFactory::class);
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('factory'))
+			->setFactory(Fio\Nette\FioFactory::class)
+			->setArguments([
+				$this->prefix('@xml.import'),
+				$this->prefix('@json'),
+				$this->prefix('@accounts'),
+				$this->prefix('@queue'),
+			]);
+	}
+
+
+	private function buildRequestFactory(): void
+	{
+		Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+
+		try {
+			$httpFactory = $this->getContainerBuilder()->getDefinitionByType(HttpFactory::class);
+		} catch (Nette\DI\MissingServiceException) {
+			$httpFactory = $this->getContainerBuilder()->addDefinition($this->prefix('http.factory'))
+				->setFactory(HttpFactory::class)
+				->setAutowired(false);
+		}
+
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('request.factory'))
+			->setFactory(Fio\Utils\GuzzleRequestFactory::class, [$httpFactory])
+			->setAutowired(false);
 	}
 
 }
