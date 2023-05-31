@@ -42,7 +42,7 @@ And choose account like this.
 ```php
 use h4kuna\Fio\Nette;
 
-$fioFactory = $container->getService('fio.factory');
+$fioFactory = $container->getService('fio.fioFactory');
 $fioPay = $fioFactory->createFioPay('next-alias');
 
 // both are same, because first is default
