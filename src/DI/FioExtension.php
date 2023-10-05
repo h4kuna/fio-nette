@@ -155,7 +155,7 @@ class FioExtension extends CompilerExtension
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('request.factory'))
-			->setFactory(Fio\Utils\GuzzleRequestFactory::class, [$httpFactory])
+			->setFactory(Fio\Utils\FioRequestFactory::class, [$httpFactory, $httpFactory])
 			->setAutowired(false);
 	}
 

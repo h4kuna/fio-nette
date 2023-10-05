@@ -14,7 +14,7 @@
   "require": {
     "php": ">=8.0",
     "h4kuna/dir": "^0.1.2",
-    "h4kuna/fio": "^3.0",
+    "h4kuna/fio": "^3.0.3",
     "nette/di": "^3.1"
   },
   "autoload": {
