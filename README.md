@@ -1,6 +1,10 @@
 # Fio for Nette
 
 [![Downloads this Month](https://img.shields.io/packagist/dm/h4kuna/fio-nette.svg)](https://packagist.org/packages/h4kuna/fio-nette)
+[![Latest Stable Version](https://poser.pugx.org/h4kuna/fio-nette/v/stable?format=flat)](https://packagist.org/packages/h4kuna/fio-nette)
+[![Coverage Status](https://coveralls.io/repos/github/h4kuna/fio-nette/badge.svg?branch=master)](https://coveralls.io/github/h4kuna/fio-nette?branch=master)
+[![Total Downloads](https://poser.pugx.org/h4kuna/fio-nette/downloads?format=flat)](https://packagist.org/packages/h4kuna/fio-nette)
+[![License](https://poser.pugx.org/h4kuna/fio-nette/license?format=flat)](https://packagist.org/packages/h4kuna/fio-nette)
 
 Homepage for **Fio** and [documentation](//github.com/h4kuna/fio).
 
