@@ -2,24 +2,20 @@
 
 namespace h4kuna\Fio\Nette\Tests;
 
-use Nette\DI;
+use h4kuna;
 use h4kuna\Fio;
+use Nette\DI;
 use Tester\Assert;
 use Tester\TestCase;
-use h4kuna;
-use Tracy\Debugger;
 
 require __DIR__ . '/../bootsrap.php';
 
 class ExtensionTest extends TestCase
 {
 
-	/**
-	 * @throws h4kuna\Fio\Exceptions\InvalidArgument
-	 */
 	public function testNoConfig(): void
 	{
-		$this->createContainer();
+		Assert::type(DI\Container::class, $this->createContainer());
 	}
 
 

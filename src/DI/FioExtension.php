@@ -10,6 +10,8 @@ use Nette;
 use Nette\DI\CompilerExtension;
 use Nette\Schema\Expect;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 /**
  * @property-read Config $config
@@ -34,7 +36,7 @@ class FioExtension extends CompilerExtension
 
 	public function loadConfiguration()
 	{
-		if ($this->config->accounts === []) {
+		if ($this->config->accounts === [] && $this->config->account !== '' && $this->config->token !== '') {
 			$this->config->accounts = [
 				'default' => [
 					'account' => $this->config->account,
@@ -64,11 +66,9 @@ class FioExtension extends CompilerExtension
 
 	private function buildAccountCollection(): void
 	{
-		$x = Fio\Account\AccountCollectionFactory::create($this->config->accounts);
-
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('accounts'))
-			->setFactory('unserialize(?)', [serialize($x)])
+			->setFactory(Fio\Account\AccountCollectionFactory::class . '::create', [$this->config->accounts])
 			->setType(Fio\Account\AccountCollection::class)
 			->setAutowired(false);
 	}
@@ -88,8 +88,9 @@ class FioExtension extends CompilerExtension
 		try {
 			$tempDir = $this->getContainerBuilder()->getDefinitionByType(TempDir::class);
 		} catch (Nette\DI\MissingServiceException) {
+			$tmp = new Nette\DI\Definitions\Statement(TempDir::class, [$this->config->tempDir]);
 			$tempDir = $this->getContainerBuilder()->addDefinition($this->prefix('tempDir'))
-				->setFactory(TempDir::class, [$this->config->tempDir])
+				->setFactory([$tmp, 'create'])
 				->setAutowired(false);
 		}
 
@@ -143,19 +144,33 @@ class FioExtension extends CompilerExtension
 
 	private function buildRequestFactory(): void
 	{
-		Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+		$streamFactory = $requestFactory = null;
+		$tryGuzzle = false;
+		try {
+			$requestFactory = $this->getContainerBuilder()->getDefinitionByType(RequestFactoryInterface::class);
+		} catch (Nette\DI\MissingServiceException) {
+			$tryGuzzle = true;
+		}
 
 		try {
-			$httpFactory = $this->getContainerBuilder()->getDefinitionByType(HttpFactory::class);
+			$streamFactory = $this->getContainerBuilder()->getDefinitionByType(StreamFactoryInterface::class);
 		} catch (Nette\DI\MissingServiceException) {
-			$httpFactory = $this->getContainerBuilder()->addDefinition($this->prefix('http.factory'))
+			$tryGuzzle = true;
+		}
+
+		if ($tryGuzzle) {
+			Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+			$httpFactory = $this->getContainerBuilder()
+				->addDefinition($this->prefix('http.factory'))
 				->setFactory(HttpFactory::class)
 				->setAutowired(false);
+			$streamFactory ??= $httpFactory;
+			$requestFactory ??= $httpFactory;
 		}
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('request.factory'))
-			->setFactory(Fio\Utils\FioRequestFactory::class, [$httpFactory, $httpFactory])
+			->setFactory(Fio\Utils\FioRequestFactory::class, [$requestFactory, $streamFactory])
 			->setAutowired(false);
 	}
 
