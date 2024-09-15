@@ -104,8 +104,14 @@ class FioExtension extends CompilerExtension
 		}
 
 		$this->getContainerBuilder()
+			->addDefinition($this->prefix('request.blocking'))
+			->setType(Fio\Contracts\RequestBlockingServiceContract::class)
+			->setFactory(Fio\Utils\FileRequestBlockingService::class, [$tempDir])
+			->setAutowired(false);
+
+		$this->getContainerBuilder()
 			->addDefinition($this->prefix('queue'))
-			->setFactory(Fio\Utils\Queue::class, [$tempDir, $client, $this->prefix('@request.factory')])
+			->setFactory(Fio\Utils\Queue::class, [$client, $this->prefix('@request.factory'), $this->prefix('@request.blocking')])
 			->setAutowired(false);
 	}
 
