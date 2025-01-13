@@ -2,7 +2,7 @@ name: Tests
 
 on:
   schedule:
-    - cron: "0 4 * * 1,3,5"
+    - cron: "0 4 * * 2,4,6"
   push:
   pull_request:
 
