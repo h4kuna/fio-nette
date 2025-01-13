@@ -18,10 +18,15 @@ use Psr\Http\Message\StreamFactoryInterface;
  */
 class FioExtension extends CompilerExtension
 {
+	public function __construct(private ?string $tempDir = null) {
+
+	}
 
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
-		$tempDir = $this->getContainerBuilder()->parameters['tempDir'] ?? '';
+		$tempDir = $this->tempDir ?? $this->getContainerBuilder()->parameters['tempDir'] ?? '';
+		assert(is_string($tempDir));
+
 		if ($tempDir !== '') {
 			$tempDir .= '/';
 		}

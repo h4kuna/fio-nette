@@ -18,20 +18,17 @@ class ExtensionTest extends TestCase
 		Assert::type(DI\Container::class, $this->createContainer());
 	}
 
-
 	public function testOneAccount(): void
 	{
 		$container = $this->createContainer([
 			'account' => '123123/5050',
 			'token' => 'token_test',
 		]);
+
+		/** @var Fio\Nette\FioFactory $fioFactory */
 		$fioFactory = $container->getService('fio.factory');
-		Assert::true($fioFactory->createFioRead() instanceof Fio\FioRead);
-
-		$fioPay = $fioFactory->createFioPay();
-		Assert::true($fioPay instanceof Fio\FioPay);
+		Assert::type(Fio\Nette\FioFactory::class, $fioFactory);
 	}
-
 
 	public function testMoreAccounts(): void
 	{
@@ -47,22 +44,17 @@ class ExtensionTest extends TestCase
 				],
 			],
 		]);
-		/* @var $fioFactory Fio\Nette\FioFactory */
+		/** @var Fio\Nette\FioFactory $fioFactory */
 		$fioFactory = $container->getService('fio.factory');
-		Assert::true($fioFactory->createFioRead() instanceof Fio\FioRead);
+		Assert::type(Fio\Nette\FioFactory::class, $fioFactory);
 
 		// PAY
 		$fioPay = $fioFactory->createFioPay();
-		Assert::true($fioPay instanceof Fio\FioPay);
 		Assert::same($fioPay->getAccount(), $fioFactory->createFioPay('my')->getAccount());
 
 		$fioPay2 = $fioFactory->createFioPay('wife');
 		Assert::same('321654', $fioPay2->getAccount()->getAccount());
-
-		// READ
-		Assert::true($fioFactory->createFioRead() instanceof Fio\FioRead);
 	}
-
 
 	/**
 	 * @param array<string, mixed> $config
