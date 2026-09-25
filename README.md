@@ -6,6 +6,8 @@
 [![Total Downloads](https://poser.pugx.org/h4kuna/fio-nette/downloads?format=flat)](https://packagist.org/packages/h4kuna/fio-nette)
 [![License](https://poser.pugx.org/h4kuna/fio-nette/license?format=flat)](https://packagist.org/packages/h4kuna/fio-nette)
 
+Part of the [h4kuna PHP libraries](https://github.com/h4kuna/library), see the overview of all packages.
+
 Homepage for **Fio** and [documentation](//github.com/h4kuna/fio).
 
 ## Install by composer
