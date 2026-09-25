@@ -8,35 +8,45 @@
 
 Part of the [h4kuna PHP libraries](https://github.com/h4kuna/library), see the overview of all packages.
 
-Homepage for **Fio** and [documentation](//github.com/h4kuna/fio).
+Nette DI extension for [h4kuna/fio](https://github.com/h4kuna/fio), where you find the documentation of the library.
 
 ## Install by composer
 
+Requires PHP 8.2 or newer.
+
 ```sh
-$ composer require h4kuna/fio-nette
+composer require h4kuna/fio-nette
+
+# optional, default HTTP client and factories
+composer require guzzlehttp/guzzle
 ```
 
-Example NEON config
--------------------
-Define extension
+If your container already has services implementing `Psr\Http\Client\ClientInterface`, `Psr\Http\Message\RequestFactoryInterface` and `Psr\Http\Message\StreamFactoryInterface`, the extension uses them, otherwise Guzzle is required.
+
+## Example NEON config
+
+Define the extension:
 ```neon
 extensions:
 	fio: h4kuna\Fio\Nette\DI\FioExtension
 ```
 
-Configure extension
+Configure the extension:
 ```neon
 fio:
 	# mandatory
 	account: 2600267402/2010
 	token: 5asd64as5d46ad5a6
+
+	# optional, the default is %tempDir%/h4kuna/fio
+	tempDir: %tempDir%/fio
 ```
 
-More accounts and first is default.
+More accounts, the first one is the default:
 ```neon
 fio:
 	accounts:
-		my-alias: # name for select account
+		my-alias: # name to select the account
 			account: 2600267402/2010
 			token: 5asd64as5d46ad5a6
 		next-alias:
@@ -44,14 +54,13 @@ fio:
 			token: 6a4sd54asadsasde564
 ```
 
-And choose account like this.
+The service `fio.factory` is autowired as `h4kuna\Fio\Nette\FioFactory`. Choose the account like this:
 ```php
-use h4kuna\Fio\Nette;
-
+/** @var h4kuna\Fio\Nette\FioFactory $fioFactory */
 $fioFactory = $container->getService('fio.factory');
 $fioPay = $fioFactory->createFioPay('next-alias');
 
-// both are same, because first is default
+// both are the same, because the first one is the default
 $fioRead = $fioFactory->createFioRead();
 $fioRead = $fioFactory->createFioRead('my-alias');
 ```
