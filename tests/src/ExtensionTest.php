@@ -8,7 +8,7 @@ use Nette\DI;
 use Tester\Assert;
 use Tester\TestCase;
 
-require __DIR__ . '/../bootsrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 class ExtensionTest extends TestCase
 {
@@ -65,7 +65,8 @@ class ExtensionTest extends TestCase
 		$temp = $tempDir->getDir();
 
 		$loader = new DI\ContainerLoader($temp, true);
-		$class = $loader->load(function (DI\Compiler $compiler) use ($config, $tempDir): void {
+		/** @var class-string<DI\Container> $class */
+		$class = $loader->load(function (DI\Compiler $compiler) use ($config, $tempDir): null {
 			$compiler->addExtension('fio', new Fio\Nette\DI\FioExtension());
 
 			$compiler->addConfig([
@@ -73,14 +74,12 @@ class ExtensionTest extends TestCase
 				'parameters' => [
 					'tempDir' => $tempDir->getDir(),
 				],
-			],
-			);
+			]);
+
+			return null;
 		}, md5(strval(microtime(true))));
 
-		$container = new $class();
-		assert($container instanceof DI\Container);
-
-		return $container;
+		return new $class();
 	}
 
 }
