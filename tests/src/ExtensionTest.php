@@ -1,12 +1,18 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Fio\Nette\Tests;
 
-use h4kuna;
-use h4kuna\Fio;
-use Nette\DI;
+use h4kuna\Dir\TempDir;
+use h4kuna\Fio\Nette\DI\FioExtension;
+use h4kuna\Fio\Nette\FioFactory;
+use Nette\DI\Compiler;
+use Nette\DI\Container;
+use Nette\DI\ContainerLoader;
 use Tester\Assert;
 use Tester\TestCase;
+use function md5;
+use function microtime;
+use function strval;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -15,7 +21,7 @@ class ExtensionTest extends TestCase
 
 	public function testNoConfig(): void
 	{
-		Assert::type(DI\Container::class, $this->createContainer());
+		Assert::type(Container::class, $this->createContainer());
 	}
 
 	public function testOneAccount(): void
@@ -25,9 +31,9 @@ class ExtensionTest extends TestCase
 			'token' => 'token_test',
 		]);
 
-		/** @var Fio\Nette\FioFactory $fioFactory */
+		/** @var FioFactory $fioFactory */
 		$fioFactory = $container->getService('fio.factory');
-		Assert::type(Fio\Nette\FioFactory::class, $fioFactory);
+		Assert::type(FioFactory::class, $fioFactory);
 	}
 
 	public function testMoreAccounts(): void
@@ -44,9 +50,9 @@ class ExtensionTest extends TestCase
 				],
 			],
 		]);
-		/** @var Fio\Nette\FioFactory $fioFactory */
+		/** @var FioFactory $fioFactory */
 		$fioFactory = $container->getService('fio.factory');
-		Assert::type(Fio\Nette\FioFactory::class, $fioFactory);
+		Assert::type(FioFactory::class, $fioFactory);
 
 		// PAY
 		$fioPay = $fioFactory->createFioPay();
@@ -59,15 +65,15 @@ class ExtensionTest extends TestCase
 	/**
 	 * @param array<string, mixed> $config
 	 */
-	private function createContainer(array $config = []): DI\Container
+	private function createContainer(array $config = []): Container
 	{
-		$tempDir = new h4kuna\Dir\TempDir(__DIR__ . '/../temp');
+		$tempDir = new TempDir(__DIR__ . '/../temp');
 		$temp = $tempDir->getDir();
 
-		$loader = new DI\ContainerLoader($temp, true);
-		/** @var class-string<DI\Container> $class */
-		$class = $loader->load(function (DI\Compiler $compiler) use ($config, $tempDir): null {
-			$compiler->addExtension('fio', new Fio\Nette\DI\FioExtension());
+		$loader = new ContainerLoader($temp, true);
+		/** @var class-string<Container> $class */
+		$class = $loader->load(static function (Compiler $compiler) use ($config, $tempDir): null {
+			$compiler->addExtension('fio', new FioExtension());
 
 			$compiler->addConfig([
 				'fio' => $config,
@@ -85,5 +91,3 @@ class ExtensionTest extends TestCase
 }
 
 (new ExtensionTest())->run();
-
-

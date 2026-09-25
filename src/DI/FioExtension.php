@@ -1,28 +1,43 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Fio\Nette\DI;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
 use h4kuna\Dir\TempDir;
-use h4kuna\Fio;
-use Nette;
+use h4kuna\Fio\Account\AccountCollection;
+use h4kuna\Fio\Account\AccountCollectionFactory;
+use h4kuna\Fio\Contracts\RequestBlockingServiceContract;
+use h4kuna\Fio\Exceptions\MissingDependency;
+use h4kuna\Fio\Nette\FioFactory;
+use h4kuna\Fio\Pay\XMLFile;
+use h4kuna\Fio\Read\Json;
+use h4kuna\Fio\Read\TransactionFactory;
+use h4kuna\Fio\Utils\FileRequestBlockingService;
+use h4kuna\Fio\Utils\FioRequestFactory;
+use h4kuna\Fio\Utils\Queue;
 use Nette\DI\CompilerExtension;
+use Nette\DI\Definitions\Statement;
+use Nette\DI\MissingServiceException;
 use Nette\Schema\Expect;
+use Nette\Schema\Schema;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use function assert;
+use function is_string;
 
 /**
  * @property-read Config $config
  */
 class FioExtension extends CompilerExtension
 {
-	public function __construct(private ?string $tempDir = null) {
 
+	public function __construct(private ?string $tempDir = null)
+	{
 	}
 
-	public function getConfigSchema(): Nette\Schema\Schema
+	public function getConfigSchema(): Schema
 	{
 		$tempDir = $this->tempDir ?? $this->getContainerBuilder()->parameters['tempDir'] ?? '';
 		assert(is_string($tempDir));
@@ -38,8 +53,7 @@ class FioExtension extends CompilerExtension
 		return Expect::from($config);
 	}
 
-
-	public function loadConfiguration()
+	public function loadConfiguration(): void
 	{
 		if ($this->config->accounts === [] && $this->config->account !== '' && $this->config->token !== '') {
 			$this->config->accounts = [
@@ -61,39 +75,35 @@ class FioExtension extends CompilerExtension
 		$this->buildFioFactory();
 	}
 
-
 	public function beforeCompile(): void
 	{
 		$this->buildRequestFactory();
 		$this->buildQueue();
 	}
 
-
 	private function buildAccountCollection(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('accounts'))
-			->setFactory(Fio\Account\AccountCollectionFactory::class . '::create', [$this->config->accounts])
-			->setType(Fio\Account\AccountCollection::class)
+			->setFactory(AccountCollectionFactory::class . '::create', [$this->config->accounts])
+			->setType(AccountCollection::class)
 			->setAutowired(false);
 	}
-
 
 	private function buildXmlFile(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('xml.import'))
-			->setFactory(Fio\Pay\XMLFile::class)
+			->setFactory(XMLFile::class)
 			->setAutowired(false);
 	}
-
 
 	private function buildQueue(): void
 	{
 		try {
 			$tempDir = $this->getContainerBuilder()->getDefinitionByType(TempDir::class);
-		} catch (Nette\DI\MissingServiceException) {
-			$tmp = new Nette\DI\Definitions\Statement(TempDir::class, [$this->config->tempDir]);
+		} catch (MissingServiceException $e) {
+			$tmp = new Statement(TempDir::class, [$this->config->tempDir]);
 			$tempDir = $this->getContainerBuilder()->addDefinition($this->prefix('tempDir'))
 				->setFactory([$tmp, 'create'])
 				->setAutowired(false);
@@ -101,8 +111,8 @@ class FioExtension extends CompilerExtension
 
 		try {
 			$client = $this->getContainerBuilder()->getDefinitionByType(ClientInterface::class);
-		} catch (Nette\DI\MissingServiceException) {
-			Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+		} catch (MissingServiceException $e) {
+			MissingDependency::checkGuzzlehttp();
 			$client = $this->getContainerBuilder()->addDefinition($this->prefix('http.client'))
 				->setFactory(Client::class)
 				->setAutowired(false);
@@ -110,40 +120,37 @@ class FioExtension extends CompilerExtension
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('request.blocking'))
-			->setType(Fio\Contracts\RequestBlockingServiceContract::class)
-			->setFactory(Fio\Utils\FileRequestBlockingService::class, [$tempDir])
+			->setType(RequestBlockingServiceContract::class)
+			->setFactory(FileRequestBlockingService::class, [$tempDir])
 			->setAutowired(false);
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('queue'))
-			->setFactory(Fio\Utils\Queue::class, [$client, $this->prefix('@request.factory'), $this->prefix('@request.blocking')])
+			->setFactory(Queue::class, [$client, $this->prefix('@request.factory'), $this->prefix('@request.blocking')])
 			->setAutowired(false);
 	}
-
 
 	private function buildTransactionFactory(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('transaction.factory'))
-			->setFactory(Fio\Read\TransactionFactory::class)
+			->setFactory(TransactionFactory::class)
 			->setAutowired(false);
 	}
-
 
 	private function buildJsonReader(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('json'))
-			->setFactory(Fio\Read\Json::class)
+			->setFactory(Json::class)
 			->setAutowired(false);
 	}
-
 
 	private function buildFioFactory(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('factory'))
-			->setFactory(Fio\Nette\FioFactory::class)
+			->setFactory(FioFactory::class)
 			->setArguments([
 				$this->prefix('@xml.import'),
 				$this->prefix('@json'),
@@ -152,25 +159,24 @@ class FioExtension extends CompilerExtension
 			]);
 	}
 
-
 	private function buildRequestFactory(): void
 	{
 		$streamFactory = $requestFactory = null;
 		$tryGuzzle = false;
 		try {
 			$requestFactory = $this->getContainerBuilder()->getDefinitionByType(RequestFactoryInterface::class);
-		} catch (Nette\DI\MissingServiceException) {
+		} catch (MissingServiceException $e) {
 			$tryGuzzle = true;
 		}
 
 		try {
 			$streamFactory = $this->getContainerBuilder()->getDefinitionByType(StreamFactoryInterface::class);
-		} catch (Nette\DI\MissingServiceException) {
+		} catch (MissingServiceException $e) {
 			$tryGuzzle = true;
 		}
 
 		if ($tryGuzzle) {
-			Fio\Exceptions\MissingDependency::checkGuzzlehttp();
+			MissingDependency::checkGuzzlehttp();
 			$httpFactory = $this->getContainerBuilder()
 				->addDefinition($this->prefix('http.factory'))
 				->setFactory(HttpFactory::class)
@@ -181,7 +187,7 @@ class FioExtension extends CompilerExtension
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('request.factory'))
-			->setFactory(Fio\Utils\FioRequestFactory::class, [$requestFactory, $streamFactory])
+			->setFactory(FioRequestFactory::class, [$requestFactory, $streamFactory])
 			->setAutowired(false);
 	}
 

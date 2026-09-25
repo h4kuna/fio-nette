@@ -1,31 +1,34 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Fio\Nette;
 
-use h4kuna\Fio;
+use h4kuna\Fio\Account\AccountCollection;
+use h4kuna\Fio\FioPay;
+use h4kuna\Fio\FioRead;
+use h4kuna\Fio\Pay\XMLFile;
+use h4kuna\Fio\Read\Json;
+use h4kuna\Fio\Utils\Queue;
 
 class /* readonly */ FioFactory
 {
 
 	public function __construct(
-		private Fio\Pay\XMLFile $xmlFile,
-		private Fio\Read\Json $json,
-		private Fio\Account\AccountCollection $accountCollection,
-		private Fio\Utils\Queue $queue,
+		private XMLFile $xmlFile,
+		private Json $json,
+		private AccountCollection $accountCollection,
+		private Queue $queue,
 	)
 	{
 	}
 
-
-	public function createFioPay(string $name = ''): Fio\FioPay
+	public function createFioPay(string $name = ''): FioPay
 	{
-		return new Fio\FioPay($this->queue, $this->accountCollection->account($name), $this->xmlFile);
+		return new FioPay($this->queue, $this->accountCollection->account($name), $this->xmlFile);
 	}
 
-
-	public function createFioRead(string $name = ''): Fio\FioRead
+	public function createFioRead(string $name = ''): FioRead
 	{
-		return new Fio\FioRead($this->queue, $this->accountCollection->account($name), $this->json);
+		return new FioRead($this->queue, $this->accountCollection->account($name), $this->json);
 	}
 
 }
