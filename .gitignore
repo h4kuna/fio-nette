@@ -1,5 +1,7 @@
+/composer.lock
 /vendor/
-composer.lock
+/.idea/
 *~
 /tests/**/output/
 coverage.html
+/var/
